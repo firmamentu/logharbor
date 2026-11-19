@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>LogHarbor</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; max-width: 720px; margin: 60px auto; color: #222; }
+    .row { display: flex; gap: 48px; margin: 32px 0; }
+    .num { font-size: 44px; font-weight: 600; line-height: 1; }
+    .label { color: #888; font-size: 14px; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <h1>LogHarbor</h1>
+  <p>日志接入与分析服务</p>
+
+  <div class="row">
+    <div><div class="num" id="total">-</div><div class="label">总请求</div></div>
+    <div><div class="num" id="ok">-</div><div class="label">200 成功</div></div>
+    <div><div class="num" id="bad">-</div><div class="label">4xx 异常</div></div>
+  </div>
+  <ul id="summary"></ul>
+
+  <pre id="raw"></pre>
+
+  <script>
+    fetch("/api/stats")
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById("summary").innerHTML = data.summary.map(s => `<li>${s}</li>`).join("");
+        document.getElementById("total").textContent = data.total;
+        document.getElementById("ok").textContent = data.status["200"] || 0;
+        const bad = Object.entries(data.status)
+          .filter(([code]) => code.startsWith("4"))
+          .reduce((sum, [, n]) => sum + n, 0);
+        document.getElementById("bad").textContent = bad;
+        document.getElementById("raw").textContent =
+          JSON.stringify(data.top_ips.slice(0, 3), null, 2);
+      });
+  </script>
+</body>
+</html>
