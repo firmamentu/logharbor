@@ -12,13 +12,12 @@ PATTERN = re.compile(
 TIME_FMT = "%d/%b/%Y:%H:%M:%S %z"
 
 
-def parse(path):
+def parse(lines):
     rows = []
-    with open(path) as f:
-        for line in f:
-            m = PATTERN.match(line)
-            if m:
-                rows.append(m.groupdict())
+    for line in lines:
+        m = PATTERN.match(line)
+        if m:
+            rows.append(m.groupdict())
     return rows
 
 
@@ -72,7 +71,8 @@ def summarize(result):
 
 
 def analyze(path):
-    rows = parse(path)
+    with open(path) as f:
+        rows = parse(f)
 
     by_ip = {}
     for r in rows:
