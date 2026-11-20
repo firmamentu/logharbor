@@ -8,35 +8,73 @@
     .row { display: flex; gap: 48px; margin: 32px 0; }
     .num { font-size: 44px; font-weight: 600; line-height: 1; }
     .label { color: #888; font-size: 14px; margin-top: 6px; }
+    #error { color: #c0392b; }
   </style>
 </head>
 <body>
   <h1>LogHarbor</h1>
   <p>日志接入与分析服务</p>
 
+  <input type="file" id="file">
+  <p id="error"></p>
+  <p id="source"></p>
+
   <div class="row">
     <div><div class="num" id="total">-</div><div class="label">总请求</div></div>
     <div><div class="num" id="ok">-</div><div class="label">200 成功</div></div>
     <div><div class="num" id="bad">-</div><div class="label">4xx 异常</div></div>
   </div>
-  <ul id="summary"></ul>
 
+  <ul id="summary"></ul>
   <pre id="raw"></pre>
 
   <script>
+    const $ = id => document.getElementById(id);
+
+    function clear() {
+      $("total").textContent = "-";
+      $("ok").textContent = "-";
+      $("bad").textContent = "-";
+      $("summary").innerHTML = "";
+      $("raw").textContent = "";
+    }
+
+    function render(data, source) {
+      $("error").textContent = "";
+      $("source").textContent = "当前：" + source;
+      $("total").textContent = data.total;
+      $("ok").textContent = data.status["200"] || 0;
+      const bad = Object.entries(data.status)
+        .filter(([code]) => code.startsWith("4"))
+        .reduce((sum, [, n]) => sum + n, 0);
+      $("bad").textContent = bad;
+      $("summary").innerHTML = data.summary.map(s => `<li>${s}</li>`).join("");
+      $("raw").textContent = JSON.stringify(data.top_ips.slice(0, 3), null, 2);
+    }
+
+    function showError(msg) {
+      $("error").textContent = msg;
+    }
+
     fetch("/api/stats")
       .then(r => r.json())
-      .then(data => {
-        document.getElementById("summary").innerHTML = data.summary.map(s => `<li>${s}</li>`).join("");
-        document.getElementById("total").textContent = data.total;
-        document.getElementById("ok").textContent = data.status["200"] || 0;
-        const bad = Object.entries(data.status)
-          .filter(([code]) => code.startsWith("4"))
-          .reduce((sum, [, n]) => sum + n, 0);
-        document.getElementById("bad").textContent = bad;
-        document.getElementById("raw").textContent =
-          JSON.stringify(data.top_ips.slice(0, 3), null, 2);
-      });
+      .then(d => render(d, "示例日志 access.log"));
+
+    $("file").addEventListener("change", async () => {
+      const file = $("file").files[0];
+      if (!file) return;
+      const fd = new FormData();
+      fd.append("file", file);
+      const r = await fetch("/api/upload", { method: "POST", body: fd });
+      if (!r.ok) {
+        const body = await r.json();
+        clear();
+        showError(body.detail || "上传失败");
+        $("source").textContent = "当前：" + file.name + "（解析失败）";
+        return;
+      }
+      render(await r.json(), file.name);
+    });
   </script>
 </body>
 </html>
