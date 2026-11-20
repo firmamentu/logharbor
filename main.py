@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.staticfiles import StaticFiles
 
-from analyzer import analyze, parse
+from analyzer import analyze, parse, analyze_rows
 
 app = FastAPI(title="LogHarbor", description="日志接入与分析服务")
 
@@ -20,4 +20,4 @@ async def create_upload_file(file: UploadFile):
     rows = parse(contents)
     if not rows:
         raise HTTPException(status_code=400, detail="这不是可解析的 nginx 日志")
-    return {"lines": len(contents), "parsed": len(rows)}
+    return analyze_rows(rows)

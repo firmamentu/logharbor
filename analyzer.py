@@ -73,7 +73,10 @@ def summarize(result):
 def analyze(path):
     with open(path) as f:
         rows = parse(f)
+    return analyze_rows(rows)
+    
 
+def analyze_rows(rows):
     by_ip = {}
     for r in rows:
         by_ip.setdefault(r["ip"], Counter())[r["status"]] += 1
