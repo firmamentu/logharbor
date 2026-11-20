@@ -1,12 +1,13 @@
 """日志解析与统计，不依赖任何 Web 框架。"""
+
 import re
 from collections import Counter
 from datetime import datetime
 
 PATTERN = re.compile(
-    r'(?P<ip>\S+) \S+ \S+ \[(?P<time>[^\]]+)\] '
+    r"(?P<ip>\S+) \S+ \S+ \[(?P<time>[^\]]+)\] "
     r'"(?P<method>\S+) (?P<path>\S+) \S+" '
-    r'(?P<status>\d{3}) (?P<size>\d+)'
+    r"(?P<status>\d{3}) (?P<size>\d+)"
 )
 
 TIME_FMT = "%d/%b/%Y:%H:%M:%S %z"
@@ -38,15 +39,19 @@ def find_suspects(rows, min_errors=10, min_ratio=0.8):
         times = [datetime.strptime(r["time"], TIME_FMT) for r in items]
         span = (max(times) - min(times)).total_seconds()
 
-        suspects.append({
-            "ip": ip,
-            "count": len(items),
-            "errors": len(errors),
-            "error_ratio": round(len(errors) / len(items), 2),
-            "span_seconds": round(span),
-            "rate": round(len(items) / span, 2) if span else None,
-            "paths": [p for p, _ in Counter(r["path"] for r in items).most_common(3)],
-        })
+        suspects.append(
+            {
+                "ip": ip,
+                "count": len(items),
+                "errors": len(errors),
+                "error_ratio": round(len(errors) / len(items), 2),
+                "span_seconds": round(span),
+                "rate": round(len(items) / span, 2) if span else None,
+                "paths": [
+                    p for p, _ in Counter(r["path"] for r in items).most_common(3)
+                ],
+            }
+        )
 
     return sorted(suspects, key=lambda s: -s["errors"])
 
@@ -74,7 +79,7 @@ def analyze(path):
     with open(path) as f:
         rows = parse(f)
     return analyze_rows(rows)
-    
+
 
 def analyze_rows(rows):
     by_ip = {}
@@ -98,4 +103,5 @@ def analyze_rows(rows):
 
 if __name__ == "__main__":
     from pprint import pprint
+
     pprint(analyze("access.log"))

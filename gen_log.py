@@ -1,4 +1,5 @@
 """生成假的 nginx access.log，用于开发和演示。"""
+
 import random
 import datetime
 
@@ -10,7 +11,7 @@ lines = []
 def add(t, ip, method, path, status, size=None):
     size = size or random.randint(180, 9000)
     lines.append(
-        f'{ip} - - [{t:%d/%b/%Y:%H:%M:%S} +0800] '
+        f"{ip} - - [{t:%d/%b/%Y:%H:%M:%S} +0800] "
         f'"{method} {path} HTTP/1.1" {status} {size} "-" "Mozilla/5.0"'
     )
 

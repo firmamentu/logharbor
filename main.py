@@ -1,7 +1,8 @@
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.staticfiles import StaticFiles
 
-from analyzer import analyze, parse, analyze_rows
+from analyzer import analyze, analyze_rows, parse
+from llm import explain
 
 app = FastAPI(title="LogHarbor", description="日志接入与分析服务")
 
